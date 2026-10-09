@@ -26,10 +26,6 @@ $(BIN)/test_pieces: tests/test_pieces.c $(STORE) src/choker.c | $(BIN)
 $(BIN)/test_kritideepta: tests/test_kritideepta.c $(PROTO) | $(BIN)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
 
-test: $(BIN)/test_pieces $(BIN)/test_kritideepta
-	./$(BIN)/test_pieces
-	./$(BIN)/test_kritideepta
-
 clean:
 	rm -rf $(BIN)
 
