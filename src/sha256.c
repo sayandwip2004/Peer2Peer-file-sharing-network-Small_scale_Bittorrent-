@@ -1,5 +1,4 @@
-/* Self-contained SHA-256 (FIPS 180-4), so the project has no OpenSSL dependency. */
-//Hello 
+ 
 #include "sha256.h"
 #include <stdio.h>
 #include <string.h>

@@ -1,21 +1,4 @@
-/*
- * tracker - lightweight peer-discovery server. It never sees file data.
- *
- *   usage: tracker [port]            (default 6969)
- *
- * Line-based text protocol over TCP. <hash> is the 64-hex-char info hash that
- * `mktorrent` prints. The peer's IP is taken from the connection itself.
- *
- *   REGISTER <hash> <port>   announce "I am listening on <port>" (repeat as heartbeat)
- *                            -> OK
- *   PEERS <hash> [port]      list peers in the swarm, omitting the caller's own <port>
- *                            -> PEERS <n>\n  followed by n lines "<ip> <port>"
- *   LEAVE <hash> <port>      remove this peer                      -> OK
- *   QUIT                     close the connection                  -> BYE
- *
- * Errors are answered with "ERR <reason>". Peers that have not re-registered for
- * PEER_TTL seconds are dropped.
- */
+
 #define _GNU_SOURCE
 #include <arpa/inet.h>
 #include <ctype.h>
@@ -33,25 +16,25 @@
 #include <unistd.h>
 
 #define DEFAULT_PORT   6969
-#define PEER_TTL       120      /* seconds without a REGISTER before a peer is forgotten */
-#define IDLE_TIMEOUT   30       /* seconds a client may stay silent */
+#define PEER_TTL       120      
+#define IDLE_TIMEOUT   30       
 #define MAX_ENTRIES    4096
-#define MAX_REPLY      50       /* peers returned per PEERS request */
+#define MAX_REPLY      50       
 #define HASH_HEX_LEN   64
 #define MAX_LINE       256
 
 typedef struct {
     int      used;
     char     hash[HASH_HEX_LEN + 1];
-    uint32_t ip;                 /* network byte order */
-    uint16_t port;               /* host byte order */
+    uint32_t ip;                
+    uint16_t port;               
     time_t   last_seen;
 } Entry;
 
 static Entry           table[MAX_ENTRIES];
 static pthread_mutex_t table_lock = PTHREAD_MUTEX_INITIALIZER;
 
-/* ---- peer table (caller must hold table_lock) ---- */
+
 
 static void expire_locked(time_t now)
 {
@@ -99,7 +82,7 @@ static void remove_peer(const char *hash, uint32_t ip, uint16_t port)
     pthread_mutex_unlock(&table_lock);
 }
 
-/* Copy up to MAX_REPLY peers of this swarm (except self) into out; returns the count. */
+
 static int list_peers(const char *hash, uint32_t self_ip, int self_port, Entry *out)
 {
     int n = 0;
@@ -114,7 +97,7 @@ static int list_peers(const char *hash, uint32_t self_ip, int self_port, Entry *
     return n;
 }
 
-/* ---- protocol helpers ---- */
+
 
 static int valid_hash(const char *s)
 {

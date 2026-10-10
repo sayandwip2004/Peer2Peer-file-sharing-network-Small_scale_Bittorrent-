@@ -12,7 +12,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-/* ---- small helpers ----------------------------------------------------- */
+
 
 static int set_nonblock(int fd)
 {
@@ -88,7 +88,7 @@ static void send_simple(peer_t *p, msg_type t)
     queue_msg(p, &m);
 }
 
-/* ---- lifecycle --------------------------------------------------------- */
+
 
 peer_t *peer_new(int fd, int id, const char *addr, uint32_t num_pieces,
                  const uint8_t info_hash[INFO_HASH_LEN],
@@ -177,7 +177,7 @@ void peer_free(peer_t *p)
     free(p);
 }
 
-/* ---- state machine ----------------------------------------------------- */
+
 
 void peer_set_choke(peer_t *p, int choke)
 {
@@ -310,11 +310,11 @@ static void handle_msg(peer_t *p, const proto_msg *m)
         fill_requests(p);
         break;
     case MSG_CANCEL:
-        break;                        /* requests are served immediately */
+        break;                       
     }
 }
 
-/* ---- I/O --------------------------------------------------------------- */
+
 
 static void process_input(peer_t *p)
 {
@@ -380,11 +380,11 @@ static void on_readable(peer_t *p, time_t now)
             if (p->dead)
                 return;
             if ((size_t)n < 16384)
-                return;               /* drained for now */
+                return;               
             continue;
         }
         if (n == 0) {
-            mark_dead(p);             /* orderly close by remote */
+            mark_dead(p);             
             return;
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -475,7 +475,7 @@ int peer_poll(peer_t **peers, size_t n, int timeout_ms, time_t now)
     return active;
 }
 
-/* ---- choker glue ------------------------------------------------------- */
+
 
 void peer_apply_choker(peer_t **peers, size_t n, choker_state *cs,
                        int seeding, time_t now)

@@ -4,7 +4,7 @@
 
 void choker_init(choker_state *cs)
 {
-    cs->last_round = 0;        /* first round runs immediately */
+    cs->last_round = 0;       
     cs->last_optimistic = 0;
     cs->optimistic_id = -1;
 }
@@ -22,7 +22,7 @@ int choker_run(choker_state *cs, choker_peer *peers, size_t n, time_t now)
         return 0;
     }
 
-    /* Indices of interested peers, sorted by rate (insertion sort; n is small). */
+    
     size_t *order = malloc(n * sizeof(*order));
     if (!order)
         return -1;
@@ -42,7 +42,7 @@ int choker_run(choker_state *cs, choker_peer *peers, size_t n, time_t now)
     for (size_t k = 0; k < top; k++)
         peers[order[k]].want_unchoke = 1;
 
-    /* Optimistic slot: keep the current one while it is still eligible. */
+    
     int keep = 0;
     if (cs->optimistic_id >= 0 &&
         cs->last_optimistic != 0 &&
