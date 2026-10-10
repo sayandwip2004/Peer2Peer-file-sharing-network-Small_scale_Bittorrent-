@@ -1,0 +1,8 @@
+# Ignore local seed files
+seed/
+
+# Ignore downloaded files
+downloads/
+
+# Ignore compiled binaries
+bin/
