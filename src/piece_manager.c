@@ -81,7 +81,7 @@ int pm_open(PieceManager *pm, const Torrent *t, const char *dir, int only_lo, in
         return -1;
     }
 
-    /* Scan what is already on disk. Only verified pieces are ever marked as owned. */
+    
     int lo = only_lo >= 0 ? only_lo : 0;
     int hi = only_hi >= 0 ? only_hi : (int)n - 1;
     uint8_t *buf = malloc(t->piece_size);
@@ -146,14 +146,14 @@ int pm_store(PieceManager *pm, uint32_t idx, const uint8_t *data, uint32_t len)
 {
     const Torrent *t = pm->t;
 
-    /* Verify BEFORE touching the file: corrupted data never reaches disk. */
+    
     if (!pm_verify(t, idx, data, len))
         return -1;
 
     pthread_mutex_lock(&pm->lock);
     if (pm->state[idx] == PS_HAVE) {
         pthread_mutex_unlock(&pm->lock);
-        return 0;                                   /* duplicate */
+        return 0;                                   
     }
     if (pwrite_full(pm->fd, data, len, (off_t)idx * t->piece_size) < 0) {
         pthread_mutex_unlock(&pm->lock);
@@ -189,12 +189,12 @@ int pm_pick(PieceManager *pm, const uint8_t *remote_bf, const uint8_t *bad, uint
         if (!bf_get(remote_bf, i)) continue;
         if (bad && bf_get(bad, i)) continue;
 
-        uint32_t a = first_piece ? 0 : pm->avail[i];    /* first piece: random choice */
+        uint32_t a = first_piece ? 0 : pm->avail[i];    
         if (a < best_avail) {
             best = (int)i; best_avail = a; ties = 1;
         } else if (a == best_avail) {
             ties++;
-            if (rand_r(&pm->seed) % (unsigned)ties == 0)  /* reservoir sampling among ties */
+            if (rand_r(&pm->seed) % (unsigned)ties == 0)  
                 best = (int)i;
         }
     }

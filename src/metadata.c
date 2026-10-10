@@ -1,15 +1,4 @@
-/*
- * metadata.c - create / load the small-scale ".torrent" metadata file.
- *
- * File format (plain text, one item per line):
- *
- *     SHA256-TORRENT 1
- *     name <file name>
- *     size <bytes>
- *     piece_size <bytes>
- *     pieces <count>
- *     <64 hex chars>          <- one line per piece, in order
- */
+
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 #include "metadata.h"
@@ -116,13 +105,13 @@ done:
     return rc;
 }
 
-/* Read one line, strip the newline. Returns 0 on success, -1 on EOF/too long. */
+
 static int read_line(FILE *f, char *line, size_t cap)
 {
     if (!fgets(line, (int)cap, f)) return -1;
     size_t n = strlen(line);
     if (n && line[n - 1] == '\n') line[--n] = '\0';
-    else if (n == cap - 1) return -1;                  /* line did not fit */
+    else if (n == cap - 1) return -1;                  
     if (n && line[n - 1] == '\r') line[--n] = '\0';
     return 0;
 }
@@ -144,8 +133,7 @@ int torrent_load(Torrent *t, const char *path)
     if (read_line(f, line, sizeof line) != 0 || strncmp(line, "name ", 5) != 0) goto bad;
     const char *nm = line + 5;
     if (*nm == '\0' || strlen(nm) >= TORRENT_NAME_MAX ||
-        strchr(nm, '/') || !strcmp(nm, ".") || !strcmp(nm, ".."))        /* no path traversal */
-        goto bad;
+        strchr(nm, '/') || !strcmp(nm, ".") || !strcmp(nm, ".."))        
     strcpy(t->name, nm);
 
     if (read_line(f, line, sizeof line) != 0 || sscanf(line, "size %llu", &size) != 1) goto bad;
@@ -154,8 +142,7 @@ int torrent_load(Torrent *t, const char *path)
 
     if (size == 0 || piece_size < MIN_PIECE_SIZE || piece_size > MAX_PIECE_SIZE) goto bad;
     if (np == 0 || np > MAX_PIECES) goto bad;
-    if (((uint64_t)size + piece_size - 1) / piece_size != np) goto bad;     /* counts must agree */
-
+    if (((uint64_t)size + piece_size - 1) / piece_size != np) goto bad;     
     t->size       = size;
     t->piece_size = piece_size;
     t->num_pieces = np;

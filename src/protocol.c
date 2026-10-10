@@ -39,7 +39,7 @@ int proto_decode_handshake(const uint8_t *in,
 
 ssize_t proto_encode(const proto_msg *m, uint8_t *out, size_t cap)
 {
-    size_t payload = 0; /* bytes after the id byte */
+    size_t payload = 0; 
 
     switch (m->type) {
     case MSG_KEEPALIVE:
@@ -162,7 +162,7 @@ ssize_t proto_decode(const uint8_t *buf, size_t len, proto_msg *out)
         out->length = (uint32_t)out->data_len;
         break;
     default:
-        return -1; /* unknown message id */
+        return -1; 
     }
     out->type = (msg_type)id;
     return (ssize_t)(4 + flen);

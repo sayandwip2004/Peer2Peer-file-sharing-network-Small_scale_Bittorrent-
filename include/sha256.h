@@ -17,12 +17,11 @@ void sha256_init(Sha256 *c);
 void sha256_update(Sha256 *c, const void *data, size_t len);
 void sha256_final(Sha256 *c, uint8_t out[SHA256_LEN]);
 
-/* One-shot helpers */
-void sha256_buf(const void *data, size_t len, uint8_t out[SHA256_LEN]);
-int  sha256_file(const char *path, uint8_t out[SHA256_LEN]);   /* 0 ok, -1 error */
 
-/* Hex helpers. hex_encode writes 2*n chars + NUL. hex_decode needs exactly 2*n hex chars. */
+void sha256_buf(const void *data, size_t len, uint8_t out[SHA256_LEN]);
+int  sha256_file(const char *path, uint8_t out[SHA256_LEN]);   
+
 void hex_encode(const uint8_t *in, size_t n, char *out);
-int  hex_decode(const char *hex, uint8_t *out, size_t n);       /* 0 ok, -1 bad */
+int  hex_decode(const char *hex, uint8_t *out, size_t n);      
 
 #endif

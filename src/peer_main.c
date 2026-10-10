@@ -1,22 +1,4 @@
-/*
- * peer - a node in the mini BitTorrent swarm (downloads and seeds at the same time).
- *
- *   usage: peer -t file.torrent -d dir -p listen_port [-T tracker_host:port]
- *               [-r lo:hi] [-x]
- *
- *   -t  metadata file made by mktorrent
- *   -d  directory holding (or receiving) the data file; existing data is verified,
- *       so a directory containing the complete file makes this peer a seed
- *   -p  TCP port this peer listens on for other peers
- *   -T  tracker to register with / ask for peers (default 127.0.0.1:6969)
- *   -r  only claim pieces lo..hi of the existing file (simulate a partial peer)
- *   -x  exit as soon as the download is complete
- *
- * Commands on stdin:  status | peers | connect <ip> <port> | quit
- *
- * This file is the glue between peer.c (wire protocol, choking), piece_manager.c
- * (verified storage, piece selection) and the tracker (discovery).
- */
+
 #define _GNU_SOURCE
 #include <arpa/inet.h>
 #include <errno.h>
@@ -39,16 +21,15 @@
 #include "protocol.h"
 
 #define MAX_PEERS       50
-#define SLOTS           256          /* per-connection request state, indexed by id % SLOTS */
-#define TRACKER_EVERY   20           /* seconds between REGISTER + PEERS */
+#define SLOTS           256         
+#define TRACKER_EVERY   20           
 
-/* ---- global state ------------------------------------------------------ */
 
 typedef struct { int piece; uint32_t next_begin; } req_slot;
 
 typedef struct {
-    uint8_t *buf;                    /* piece being assembled from 16 KiB blocks */
-    uint8_t *got;                    /* got[b] = 1 once block b arrived */
+    uint8_t *buf;                   
+    uint8_t *got;                   
     uint32_t nblk, ngot;
 } assembly;
 
@@ -66,9 +47,9 @@ static struct {
     size_t        npeers;
     int           next_id;
     req_slot      slot[SLOTS];
-    assembly     *asmb;              /* one per piece */
+    assembly     *asmb;              
 
-    uint8_t      *cache;             /* last piece read for uploading */
+    uint8_t      *cache;             
     int           cache_idx;
 
     int           bad_pieces;
@@ -84,7 +65,7 @@ static double now_s(void)
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
 }
 
-/* ---- peer_ops callbacks (piece manager <-> wire protocol) -------------- */
+
 
 static int op_have_piece(void *ctx, uint32_t idx) { (void)ctx; return pm_has(&G.pm, idx); }
 
@@ -135,7 +116,7 @@ static int op_write_block(void *ctx, uint32_t idx, uint32_t begin, const uint8_t
     if (plen == 0 || len == 0 || len > BLOCK_SIZE || begin % BLOCK_SIZE != 0 ||
         begin >= plen || len > plen - begin)
         return -1;
-    if (pm_has(&G.pm, idx)) return 0;                 /* duplicate of a finished piece */
+    if (pm_has(&G.pm, idx)) return 0;                 
 
     assembly *a = &G.asmb[idx];
     if (!a->buf) {
@@ -151,7 +132,7 @@ static int op_write_block(void *ctx, uint32_t idx, uint32_t begin, const uint8_t
     if (!a->got[b]) { a->got[b] = 1; a->ngot++; }
     if (a->ngot < a->nblk) return 0;
 
-    /* whole piece present: verify the SHA-256 and write it out */
+   
     int r = pm_store(&G.pm, idx, a->buf, plen);
     drop_assembly(idx);
     if (r == 1) {
@@ -197,7 +178,7 @@ static void op_release_requests(void *ctx, int id)
     req_slot *s = &G.slot[(unsigned)id % SLOTS];
     s->piece = -1;
     s->next_begin = 0;
-    int n = pm_release_owner(&G.pm, (uint32_t)id);   /* blocks go back to other peers */
+    int n = pm_release_owner(&G.pm, (uint32_t)id);   
     if (n > 0) {
         printf("[peer] connection %d lost/choked: %d piece(s) re-queued for other peers\n", id, n);
         fflush(stdout);
@@ -214,7 +195,6 @@ static const peer_ops OPS = {
     .release_requests = op_release_requests,
 };
 
-/* ---- tracker client ---------------------------------------------------- */
 
 static int tracker_connect(void)
 {
@@ -252,7 +232,7 @@ static void connect_to(const char *ip, uint16_t port)
     fflush(stdout);
 }
 
-/* REGISTER ourselves, then ask for the swarm and connect to everyone new. */
+
 static void tracker_sync(void)
 {
     int fd = tracker_connect();
@@ -304,12 +284,11 @@ static void tracker_leave(void)
     close(fd);
 }
 
-/* ---- housekeeping ------------------------------------------------------ */
+
 
 static void reap_dead_and_duplicates(void)
 {
-    /* Two peers may dial each other at the same time: keep one connection per remote id,
-     * and never talk to ourselves. */
+    
     for (size_t i = 0; i < G.npeers; i++) {
         peer_t *a = G.peers[i];
         if (a->dead || !a->handshake_done) continue;
@@ -333,7 +312,7 @@ static void reap_dead_and_duplicates(void)
     G.npeers = k;
 }
 
-/* Tell the piece manager how many connected peers hold each piece (rarest-first). */
+
 static void refresh_availability(void)
 {
     pthread_mutex_lock(&G.pm.lock);
@@ -480,14 +459,14 @@ int main(int argc, char **argv)
         if (now - last_tracker >= TRACKER_EVERY) { tracker_sync(); last_tracker = time(NULL); }
         if (now - last_avail >= 1) { refresh_availability(); last_avail = now; }
 
-        /* new inbound connections and keyboard commands */
+        
         struct pollfd pf[2] = { { .fd = lfd, .events = POLLIN },
                                 { .fd = stdin_open ? STDIN_FILENO : -1, .events = POLLIN } };
         if (poll(pf, 2, 0) > 0) {
             if (pf[0].revents & POLLIN) accept_one(lfd);
             if (pf[1].revents & (POLLIN | POLLHUP)) {
                 char cmd[128];
-                if (!fgets(cmd, sizeof cmd, stdin)) stdin_open = 0;   /* EOF: keep serving */
+                if (!fgets(cmd, sizeof cmd, stdin)) stdin_open = 0;  
                 else handle_command(cmd);
             }
         }

@@ -1,10 +1,4 @@
-/*
- * mktorrent - build a torrent metadata file from a source file.
- *
- *   usage: mktorrent [-p piece_size_bytes] [-o out.torrent] <file>
- *
- * The file is split into fixed-size pieces and every piece is hashed with SHA-256.
- */
+
 #define _GNU_SOURCE
 #include "metadata.h"
 
@@ -68,7 +62,7 @@ int main(int argc, char **argv)
     if (torrent_create(src, piece_size, out) != 0) return 1;
 
     Torrent t;
-    if (torrent_load(&t, out) != 0) return 1;      /* read back to prove the file is valid */
+    if (torrent_load(&t, out) != 0) return 1;      
 
     uint8_t ih[SHA256_LEN];
     char hex[SHA256_LEN * 2 + 1];
